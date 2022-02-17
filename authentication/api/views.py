@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-from authentication.api.serializers import RegistrationSerializer,EmailVerificationSerializer
+from authentication.api.serializers import RegistrationSerializer,EmailVerificationSerializer,LoginSerializer
 from authentication.api.utils import SendEmail
 from authentication.models import User
 from authentication.api.utils import SendEmail
@@ -36,7 +36,7 @@ class RegistrationView(views.APIView):
         absolute_url =  'http://'+current_site.domain +relative_url+'?token='+token
         email_body = "Hi "+ user.username + "'click on the link below to activate your belasea.com's account \n"+ absolute_url
         data = {
-            'email_body':absolute_url, 'email_subject':'Verify Your Email'
+            'email_body':absolute_url, 'email_subject':'Verify Your Email', 'email_to':user.email
         }
         SendEmail.send(data)
         return Response(user_data , status = status.HTTP_201_CREATED)
@@ -57,3 +57,16 @@ class EmailVerification(views.APIView):
             return Response({'error': 'Activation link Expired'}, status = status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
             return Response({'error': 'invalid token'}, status = status.HTTP_400_BAD_REQUEST)
+
+
+
+class LoginAPIView(views.APIView):
+    serializer_class = LoginSerializer
+    def post(self, request):
+        
+        serializer = self.serializer_class(data = request.data)
+        serializer.is_valid(raise_exceptions = True)
+
+        return Response(serializer.data, status = status.HTTP_200_OK)
+
+    
